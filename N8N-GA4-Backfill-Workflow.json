@@ -1,0 +1,1714 @@
+{
+  "name": "N8N-GA4-Backfill-Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "propertyId": {
+          "__rl": true,
+          "value": "={{ $json['GA4 Property ID'] }}",
+          "mode": "id"
+        },
+        "dateRange": "custom",
+        "startDate": "={{ $json.startDate }}",
+        "endDate": "={{ $json.endDate }}",
+        "metricsGA4": {
+          "metricValues": [
+            {
+              "listName": "sessions"
+            },
+            {},
+            {
+              "listName": "other",
+              "name": "=newUsers"
+            },
+            {
+              "listName": "other",
+              "name": "=ecommercePurchases"
+            },
+            {
+              "listName": "other",
+              "name": "=purchaseRevenue"
+            }
+          ]
+        },
+        "dimensionsGA4": {
+          "dimensionValues": [
+            {},
+            {
+              "listName": "other",
+              "name": "=sessionDefaultChannelGroup"
+            }
+          ]
+        },
+        "returnAll": true,
+        "simple": false,
+        "additionalFields": {}
+      },
+      "id": "f32e1c39-2717-49a7-9460-d6813c02173c",
+      "name": "GA4 - Session Channel Group",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "typeVersion": 2,
+      "position": [
+        208,
+        -32
+      ],
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "N822fmXx9EAJHHvz",
+          "name": "Google Analytics account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "={{ $('Backfill Config').item.json.project_id }}",
+          "mode": "id"
+        },
+        "sqlQuery": "-- This query creates a table for session data by channel group for the specified date range.\n-- It then inserts the aggregated data from the corresponding GA4 node.\nCREATE OR REPLACE TABLE `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_session_channel_group_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (\n  date DATE,\n  sessionDefaultChannelGroup STRING,\n  sessions INT64,\n  totalUsers INT64,\n  newUsers INT64,\n  ecommercePurchases INT64,\n  purchaseRevenue FLOAT64\n);\n\n-- Insert data from the GA4 node.\nINSERT INTO `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_session_channel_group_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (date, sessionDefaultChannelGroup, sessions, totalUsers, newUsers, ecommercePurchases, purchaseRevenue)\nVALUES\n{{ $items()[0].json.rows.map(row => `(PARSE_DATE('%Y%m%d', '${row.dimensionValues[0].value}'), '${row.dimensionValues[1].value}', ${row.metricValues[0].value || 'NULL'}, ${row.metricValues[1].value || 'NULL'}, ${row.metricValues[2].value || 'NULL'}, ${row.metricValues[3].value || 'NULL'}, ${row.metricValues[4].value || 'NULL'})`).join(',') }};\n",
+        "options": {}
+      },
+      "id": "63516756-ef3b-4268-8759-b3a03b53df6c",
+      "name": "BQ - ga4_data_session_channel_group",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        -32
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "kDd0MUBzG5npSwBI",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "propertyId": {
+          "__rl": true,
+          "value": "={{ $json['GA4 Property ID'] }}",
+          "mode": "id"
+        },
+        "dateRange": "custom",
+        "startDate": "={{ $json.startDate }}",
+        "endDate": "={{ $json.endDate }}",
+        "metricsGA4": {
+          "metricValues": [
+            {
+              "listName": "sessions"
+            },
+            {},
+            {
+              "listName": "other",
+              "name": "=newUsers"
+            },
+            {
+              "listName": "other",
+              "name": "=ecommercePurchases"
+            },
+            {
+              "listName": "other",
+              "name": "=purchaseRevenue"
+            }
+          ]
+        },
+        "dimensionsGA4": {
+          "dimensionValues": [
+            {},
+            {
+              "listName": "other",
+              "name": "=sessionSource"
+            },
+            {
+              "listName": "other",
+              "name": "=sessionCampaignName"
+            },
+            {
+              "listName": "other",
+              "name": "=sessionMedium"
+            }
+          ]
+        },
+        "returnAll": true,
+        "simple": false,
+        "additionalFields": {}
+      },
+      "id": "80b50d7b-f86d-47e2-9c84-4a678d0a779a",
+      "name": "GA4 - Session Source/Campaign/Medium",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "typeVersion": 2,
+      "position": [
+        208,
+        160
+      ],
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "N822fmXx9EAJHHvz",
+          "name": "Google Analytics account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "={{ $('Backfill Config').item.json.project_id }}",
+          "mode": "id"
+        },
+        "sqlQuery": "-- Creates and populates a daily table for session data by source, campaign, and medium.\nCREATE OR REPLACE TABLE `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_session_source_campaign_medium_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (\n  date DATE,\n  sessionSource STRING,\n  sessionCampaignName STRING,\n  sessionMedium STRING,\n  sessions INT64,\n  totalUsers INT64,\n  newUsers INT64,\n  ecommercePurchases INT64,\n  purchaseRevenue FLOAT64\n);\n\n-- Insert data from the GA4 node.\nINSERT INTO `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_session_source_campaign_medium_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (date, sessionSource, sessionCampaignName, sessionMedium, sessions, totalUsers, newUsers, ecommercePurchases, purchaseRevenue)\nVALUES\n{{ $items()[0].json.rows.map(row => `(PARSE_DATE('%Y%m%d', '${row.dimensionValues[0].value}'), '${row.dimensionValues[1].value}', '${row.dimensionValues[2].value}', '${row.dimensionValues[3].value}', ${row.metricValues[0].value || 'NULL'}, ${row.metricValues[1].value || 'NULL'}, ${row.metricValues[2].value || 'NULL'}, ${row.metricValues[3].value || 'NULL'}, ${row.metricValues[4].value || 'NULL'})`).join(',') }};\n",
+        "options": {}
+      },
+      "id": "72793ada-5295-4f77-8bbd-008db5618f96",
+      "name": "BQ - ga4_data_session_source_campaign_medium",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        160
+      ],
+      "executeOnce": false,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "kDd0MUBzG5npSwBI",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "propertyId": {
+          "__rl": true,
+          "value": "={{ $json['GA4 Property ID'] }}",
+          "mode": "id"
+        },
+        "dateRange": "custom",
+        "startDate": "={{ $json.startDate }}",
+        "endDate": "={{ $json.endDate }}",
+        "metricsGA4": {
+          "metricValues": [
+            {
+              "listName": "sessions"
+            },
+            {
+              "listName": "screenPageViews"
+            },
+            {},
+            {
+              "listName": "other",
+              "name": "=newUsers"
+            },
+            {
+              "listName": "other",
+              "name": "=ecommercePurchases"
+            },
+            {
+              "listName": "other",
+              "name": "=purchaseRevenue"
+            }
+          ]
+        },
+        "dimensionsGA4": {
+          "dimensionValues": [
+            {},
+            {
+              "listName": "city"
+            },
+            {
+              "listName": "language"
+            },
+            {
+              "listName": "country"
+            }
+          ]
+        },
+        "returnAll": true,
+        "simple": false,
+        "additionalFields": {}
+      },
+      "id": "49c49760-94c0-4c1d-92db-1f7092f209e3",
+      "name": "GA4 - Country/Language/City",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "typeVersion": 2,
+      "position": [
+        208,
+        352
+      ],
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "N822fmXx9EAJHHvz",
+          "name": "Google Analytics account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "={{ $('Backfill Config').item.json.project_id }}",
+          "mode": "id"
+        },
+        "sqlQuery": "-- Creates and populates a daily table for user data by country, language, and city.\nCREATE OR REPLACE TABLE `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_country_language_city_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (\n  date DATE,\n  country STRING,\n  language STRING,\n  city STRING,\n  sessions INT64,\n  screenPageViews INT64,\n  totalUsers INT64,\n  newUsers INT64,\n  ecommercePurchases INT64,\n  purchaseRevenue FLOAT64\n);\n\n-- Insert data from the GA4 node.\nINSERT INTO `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_country_language_city_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (date, country, language, city, sessions, screenPageViews, totalUsers, newUsers, ecommercePurchases, purchaseRevenue)\nVALUES\n{{ $items()[0].json.rows.map(row => `(PARSE_DATE('%Y%m%d', '${row.dimensionValues[0].value}'), '${row.dimensionValues[1].value}', '${row.dimensionValues[2].value}', '${row.dimensionValues[3].value}', ${row.metricValues[0].value || 'NULL'}, ${row.metricValues[1].value || 'NULL'}, ${row.metricValues[2].value || 'NULL'}, ${row.metricValues[3].value || 'NULL'}, ${row.metricValues[4].value || 'NULL'}, ${row.metricValues[5].value || 'NULL'})`).join(',') }};\n",
+        "options": {}
+      },
+      "id": "ce5230a5-4203-41b9-a9d1-e5a6cf33ab59",
+      "name": "BQ - ga4_data_country_language_city",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        352
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "kDd0MUBzG5npSwBI",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "propertyId": {
+          "__rl": true,
+          "value": "={{ $json['GA4 Property ID'] }}",
+          "mode": "id"
+        },
+        "dateRange": "custom",
+        "startDate": "={{ $json.startDate }}",
+        "endDate": "={{ $json.endDate }}",
+        "metricsGA4": {
+          "metricValues": [
+            {
+              "listName": "other",
+              "name": "=itemPurchaseQuantity"
+            },
+            {
+              "listName": "other",
+              "name": "=itemRevenue"
+            }
+          ]
+        },
+        "dimensionsGA4": {
+          "dimensionValues": [
+            {},
+            {
+              "listName": "itemName"
+            }
+          ]
+        },
+        "returnAll": true,
+        "simple": false,
+        "additionalFields": {}
+      },
+      "id": "c3d44f0b-7cbb-4614-bec5-50bd30bd5c89",
+      "name": "GA4 - Item Name",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "typeVersion": 2,
+      "position": [
+        208,
+        544
+      ],
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "N822fmXx9EAJHHvz",
+          "name": "Google Analytics account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "={{ $('Backfill Config').item.json.project_id }}",
+          "mode": "id"
+        },
+        "sqlQuery": "-- Creates and populates a daily table for item-specific metrics.\nCREATE OR REPLACE TABLE `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_item_name_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (\n  date DATE,\n  itemName STRING,\n  itemPurchaseQuantity INT64,\n  itemRevenue FLOAT64\n);\n\n-- Insert data from the GA4 node.\nINSERT INTO `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_item_name_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (date, itemName, itemPurchaseQuantity, itemRevenue)\nVALUES\n{{ $items()[0].json.rows.map(row => `(PARSE_DATE('%Y%m%d', '${row.dimensionValues[0].value}'), '${row.dimensionValues[1].value}', ${row.metricValues[0].value || 'NULL'}, ${row.metricValues[1].value || 'NULL'})`).join(',') }};\n",
+        "options": {}
+      },
+      "id": "89979dc2-7dea-4c8d-94c3-12ce182fcfeb",
+      "name": "BQ - ga4_data_item_name",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        544
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "kDd0MUBzG5npSwBI",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "propertyId": {
+          "__rl": true,
+          "value": "={{ $json['GA4 Property ID'] }}",
+          "mode": "id"
+        },
+        "dateRange": "custom",
+        "startDate": "={{ $json.startDate }}",
+        "endDate": "={{ $json.endDate }}",
+        "metricsGA4": {
+          "metricValues": [
+            {
+              "listName": "sessions"
+            },
+            {},
+            {
+              "listName": "screenPageViews"
+            },
+            {
+              "listName": "other",
+              "name": "=newUsers"
+            },
+            {
+              "listName": "other",
+              "name": "=ecommercePurchases"
+            },
+            {
+              "listName": "other",
+              "name": "=purchaseRevenue"
+            }
+          ]
+        },
+        "dimensionsGA4": {
+          "dimensionValues": [
+            {},
+            {
+              "listName": "browser"
+            },
+            {
+              "listName": "other",
+              "name": "=operatingSystem"
+            },
+            {
+              "listName": "deviceCategory"
+            }
+          ]
+        },
+        "returnAll": true,
+        "simple": false,
+        "additionalFields": {}
+      },
+      "id": "5327f5d0-5ec6-45cd-91d5-6af3ef63ee6d",
+      "name": "GA4 - Browser/OS/Device",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "typeVersion": 2,
+      "position": [
+        208,
+        736
+      ],
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "N822fmXx9EAJHHvz",
+          "name": "Google Analytics account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "={{ $('Backfill Config').item.json.project_id }}",
+          "mode": "id"
+        },
+        "sqlQuery": "-- Creates and populates a daily table for technology data (browser, OS, device).\nCREATE OR REPLACE TABLE `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_browser_os_device_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (\n  date DATE,\n  browser STRING,\n  operatingSystem STRING,\n  deviceCategory STRING,\n  sessions INT64,\n  screenPageViews INT64,\n  totalUsers INT64,\n  newUsers INT64,\n  ecommercePurchases INT64,\n  purchaseRevenue FLOAT64\n);\n\n-- Insert data from the GA4 node.\nINSERT INTO `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_browser_os_device_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (date, browser, operatingSystem, deviceCategory, sessions, screenPageViews, totalUsers, newUsers, ecommercePurchases, purchaseRevenue)\nVALUES\n{{ $items()[0].json.rows.map(row => `(PARSE_DATE('%Y%m%d', '${row.dimensionValues[0].value}'), '${row.dimensionValues[1].value}', '${row.dimensionValues[2].value}', '${row.dimensionValues[3].value}', ${row.metricValues[0].value || 'NULL'}, ${row.metricValues[1].value || 'NULL'}, ${row.metricValues[2].value || 'NULL'}, ${row.metricValues[3].value || 'NULL'}, ${row.metricValues[4].value || 'NULL'}, ${row.metricValues[5].value || 'NULL'})`).join(',') }};\n",
+        "options": {}
+      },
+      "id": "8b930525-2a2e-4298-97f4-3e3a0339b4b7",
+      "name": "BQ - ga4_data_browser_os_device",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        736
+      ],
+      "retryOnFail": false,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "kDd0MUBzG5npSwBI",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "propertyId": {
+          "__rl": true,
+          "value": "={{ $json['GA4 Property ID'] }}",
+          "mode": "id"
+        },
+        "dateRange": "custom",
+        "startDate": "={{ $json.startDate }}",
+        "endDate": "={{ $json.endDate }}",
+        "metricsGA4": {
+          "metricValues": [
+            {},
+            {
+              "listName": "other",
+              "name": "=newUsers"
+            },
+            {
+              "listName": "other",
+              "name": "=ecommercePurchases"
+            },
+            {
+              "listName": "other",
+              "name": "=purchaseRevenue"
+            }
+          ]
+        },
+        "dimensionsGA4": {
+          "dimensionValues": [
+            {},
+            {
+              "listName": "other",
+              "name": "=firstUserMedium"
+            },
+            {
+              "listName": "other",
+              "name": "=firstUserCampaignName"
+            },
+            {
+              "listName": "other",
+              "name": "=firstUserSource"
+            }
+          ]
+        },
+        "returnAll": true,
+        "simple": false,
+        "additionalFields": {}
+      },
+      "id": "8484f92d-9339-4641-a7f6-99918518047b",
+      "name": "GA4 - First User Source/Medium",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "typeVersion": 2,
+      "position": [
+        208,
+        928
+      ],
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "N822fmXx9EAJHHvz",
+          "name": "Google Analytics account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "={{ $('Backfill Config').item.json.project_id }}",
+          "mode": "id"
+        },
+        "sqlQuery": "-- Creates and populates a daily table for first-user acquisition source.\nCREATE OR REPLACE TABLE `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_first_user_source_medium_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (\n  date DATE,\n  firstUserMedium STRING,\n  firstUserSource STRING,\n  firstUserCampaignName STRING,\n  totalUsers INT64,\n  newUsers INT64,\n  ecommercePurchases INT64,\n  purchaseRevenue FLOAT64\n);\n\n-- Insert data from the GA4 node.\nINSERT INTO `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_first_user_source_medium_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (date, firstUserMedium, firstUserSource, firstUserCampaignName, totalUsers, newUsers, ecommercePurchases, purchaseRevenue)\nVALUES\n{{ $items()[0].json.rows.map(row => `(PARSE_DATE('%Y%m%d', '${row.dimensionValues[0].value}'), '${row.dimensionValues[1].value}', '${row.dimensionValues[2].value}', '${row.dimensionValues[3].value}', ${row.metricValues[0].value || 'NULL'}, ${row.metricValues[1].value || 'NULL'}, ${row.metricValues[2].value || 'NULL'}, ${row.metricValues[3].value || 'NULL'})`).join(',') }};\n",
+        "options": {}
+      },
+      "id": "cc399414-9ada-49e7-a1a3-847b501761ad",
+      "name": "BQ - ga4_data_first_user_source_medium",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        928
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "kDd0MUBzG5npSwBI",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "propertyId": {
+          "__rl": true,
+          "value": "={{ $json['GA4 Property ID'] }}",
+          "mode": "id"
+        },
+        "dateRange": "custom",
+        "startDate": "={{ $json.startDate }}",
+        "endDate": "={{ $json.endDate }}",
+        "metricsGA4": {
+          "metricValues": [
+            {},
+            {
+              "listName": "other",
+              "name": "=newUsers"
+            },
+            {
+              "listName": "other",
+              "name": "=ecommercePurchases"
+            },
+            {
+              "listName": "other",
+              "name": "=purchaseRevenue"
+            }
+          ]
+        },
+        "dimensionsGA4": {
+          "dimensionValues": [
+            {},
+            {
+              "listName": "other",
+              "name": "=firstUserDefaultChannelGroup"
+            }
+          ]
+        },
+        "returnAll": true,
+        "simple": false,
+        "additionalFields": {}
+      },
+      "id": "50048559-4116-4e05-b288-f97572267241",
+      "name": "GA4 - First User Channel Group",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "typeVersion": 2,
+      "position": [
+        208,
+        1120
+      ],
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "N822fmXx9EAJHHvz",
+          "name": "Google Analytics account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "={{ $('Backfill Config').item.json.project_id }}",
+          "mode": "id"
+        },
+        "sqlQuery": "-- Creates and populates a daily table for first-user acquisition by channel group.\nCREATE OR REPLACE TABLE `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_first_user_channel_group_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (\n  date DATE,\n  firstUserDefaultChannelGroup STRING,\n  totalUsers INT64,\n  newUsers INT64,\n  ecommercePurchases INT64,\n  purchaseRevenue FLOAT64\n);\n\n-- Insert data from the GA4 node.\nINSERT INTO `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_data_first_user_channel_group_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (date, firstUserDefaultChannelGroup, totalUsers, newUsers, ecommercePurchases, purchaseRevenue)\nVALUES\n{{ $items()[0].json.rows.map(row => `(PARSE_DATE('%Y%m%d', '${row.dimensionValues[0].value}'), '${row.dimensionValues[1].value}', ${row.metricValues[0].value || 'NULL'}, ${row.metricValues[1].value || 'NULL'}, ${row.metricValues[2].value || 'NULL'}, ${row.metricValues[3].value || 'NULL'})`).join(',') }};\n",
+        "options": {}
+      },
+      "id": "28b6c384-7b3e-4c4e-80e4-a7ecc5a3da14",
+      "name": "BQ - ga4_data_first_user_channel_group",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        1120
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "kDd0MUBzG5npSwBI",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "propertyId": {
+          "__rl": true,
+          "value": "={{ $json['GA4 Property ID'] }}",
+          "mode": "id"
+        },
+        "dateRange": "custom",
+        "startDate": "={{ $json.startDate }}",
+        "endDate": "={{ $json.endDate }}",
+        "metricsGA4": {
+          "metricValues": [
+            {
+              "listName": "other",
+              "name": "=ecommercePurchases"
+            },
+            {
+              "listName": "other",
+              "name": "=averagePurchaseRevenue"
+            },
+            {
+              "listName": "other",
+              "name": "=purchaseRevenue"
+            },
+            {
+              "listName": "other",
+              "name": "=advertiserAdClicks"
+            },
+            {
+              "listName": "other",
+              "name": "=advertiserAdCost"
+            },
+            {
+              "listName": "other",
+              "name": "=advertiserAdCostPerClick"
+            },
+            {
+              "listName": "other",
+              "name": "=returnOnAdSpend"
+            }
+          ]
+        },
+        "dimensionsGA4": {
+          "dimensionValues": [
+            {},
+            {
+              "listName": "other",
+              "name": "=sessionSource"
+            },
+            {
+              "listName": "other",
+              "name": "=sessionMedium"
+            },
+            {
+              "listName": "other",
+              "name": "=sessionCampaignName"
+            }
+          ]
+        },
+        "returnAll": true,
+        "simple": false,
+        "additionalFields": {}
+      },
+      "id": "f64443b4-c1b0-4823-a2ff-883a230fabce",
+      "name": "GA4 - Ads Data",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "typeVersion": 2,
+      "position": [
+        208,
+        1312
+      ],
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "N822fmXx9EAJHHvz",
+          "name": "Google Analytics account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "={{ $('Backfill Config').item.json.project_id }}",
+          "mode": "id"
+        },
+        "sqlQuery": "-- Creates and populates a daily table for advertising performance metrics.\nCREATE OR REPLACE TABLE `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_ads_data_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (\n  date DATE,\n  sessionSource STRING,\n  sessionMedium STRING,\n  sessionCampaignName STRING,\n  ecommercePurchases INT64,\n  averagePurchaseRevenue FLOAT64,\n  purchaseRevenue FLOAT64,\n  advertiserAdClicks INT64,\n  advertiserAdCost FLOAT64,\n  advertiserAdCostPerClick FLOAT64,\n  returnOnAdSpend FLOAT64\n);\n\n-- Insert data from the GA4 node.\nINSERT INTO `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_ads_data_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (date, sessionSource, sessionMedium, sessionCampaignName, ecommercePurchases, averagePurchaseRevenue, purchaseRevenue, advertiserAdClicks, advertiserAdCost, advertiserAdCostPerClick, returnOnAdSpend)\nVALUES\n{{ $items()[0].json.rows.map(row => `(PARSE_DATE('%Y%m%d', '${row.dimensionValues[0].value}'), '${row.dimensionValues[1].value}', '${row.dimensionValues[2].value}', '${row.dimensionValues[3].value}', ${row.metricValues[0].value || 'NULL'}, ${row.metricValues[1].value || 'NULL'}, ${row.metricValues[2].value || 'NULL'}, ${row.metricValues[3].value || 'NULL'}, ${row.metricValues[4].value || 'NULL'}, ${row.metricValues[5].value || 'NULL'}, ${row.metricValues[6].value || 'NULL'})`).join(',') }};\n",
+        "options": {}
+      },
+      "id": "a65270a4-b14c-4ef9-9a20-0166f301b05a",
+      "name": "BQ - ga4_ads_data",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        1312
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "kDd0MUBzG5npSwBI",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "propertyId": {
+          "__rl": true,
+          "value": "={{ $json['GA4 Property ID'] }}",
+          "mode": "id"
+        },
+        "dateRange": "custom",
+        "startDate": "={{ $json.startDate }}",
+        "endDate": "={{ $json.endDate }}",
+        "metricsGA4": {
+          "metricValues": [
+            {
+              "listName": "sessions"
+            },
+            {},
+            {
+              "listName": "userEngagementDuration"
+            },
+            {
+              "listName": "other",
+              "name": "=newUsers"
+            },
+            {
+              "listName": "other",
+              "name": "=engagementRate"
+            },
+            {
+              "listName": "other",
+              "name": "=engagedSessions"
+            },
+            {
+              "listName": "screenPageViews"
+            },
+            {
+              "listName": "other",
+              "name": "=purchaseRevenue"
+            },
+            {
+              "listName": "other",
+              "name": "=ecommercePurchases"
+            }
+          ]
+        },
+        "dimensionsGA4": {
+          "dimensionValues": [
+            {}
+          ]
+        },
+        "returnAll": true,
+        "simple": false,
+        "additionalFields": {}
+      },
+      "id": "bc48f4b9-9d19-4f2a-9bd6-7ea4a43ee101",
+      "name": "GA4 - All Metrics",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "typeVersion": 2,
+      "position": [
+        208,
+        1504
+      ],
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "N822fmXx9EAJHHvz",
+          "name": "Google Analytics account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "={{ $('Backfill Config').item.json.project_id }}",
+          "mode": "id"
+        },
+        "sqlQuery": "-- Creates and populates a daily summary table of all key metrics.\n-- This version is corrected to match the exact output of the GA4 - All Metrics node.\nCREATE OR REPLACE TABLE `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_all_metrics_data_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (\n  date DATE,\n  sessions INT64,\n  totalUsers INT64,\n  userEngagementDuration FLOAT64,\n  newUsers INT64,\n  engagementRate FLOAT64,\n  engagedSessions INT64,\n  screenPageViews INT64,\n  purchaseRevenue FLOAT64,\n  ecommercePurchases INT64\n);\n\n-- Insert data from the GA4 node with the correct metric mapping.\nINSERT INTO `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_all_metrics_data_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (date, sessions, totalUsers, userEngagementDuration, newUsers, engagementRate, engagedSessions, screenPageViews, purchaseRevenue, ecommercePurchases)\nVALUES\n{{ $items()[0].json.rows.map(row => `(PARSE_DATE('%Y%m%d', '${row.dimensionValues[0].value}'), ${row.metricValues[0].value || 'NULL'}, ${row.metricValues[1].value || 'NULL'}, ${row.metricValues[2].value || 'NULL'}, ${row.metricValues[3].value || 'NULL'}, ${row.metricValues[4].value || 'NULL'}, ${row.metricValues[5].value || 'NULL'}, ${row.metricValues[6].value || 'NULL'}, ${row.metricValues[7].value || 'NULL'}, ${row.metricValues[8].value || 'NULL'})`).join(',') }};",
+        "options": {}
+      },
+      "id": "bd872e41-c6df-4a3c-abb8-c4b6437b201c",
+      "name": "BQ - ga4_all_metrics_data",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        1504
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "kDd0MUBzG5npSwBI",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "propertyId": {
+          "__rl": true,
+          "value": "={{ $json['GA4 Property ID'] }}",
+          "mode": "id"
+        },
+        "dateRange": "custom",
+        "startDate": "={{ $json.startDate }}",
+        "endDate": "={{ $json.endDate }}",
+        "metricsGA4": {
+          "metricValues": [
+            {
+              "listName": "=eventCount",
+              "name": "custom_metric"
+            },
+            {
+              "listName": "other",
+              "name": "=eventValue"
+            },
+            {
+              "listName": "other",
+              "name": "=eventCountPerUser"
+            }
+          ]
+        },
+        "dimensionsGA4": {
+          "dimensionValues": [
+            {},
+            {
+              "listName": "other",
+              "name": "=eventName"
+            }
+          ]
+        },
+        "returnAll": true,
+        "simple": false,
+        "additionalFields": {}
+      },
+      "id": "0d02d03f-e2ce-4de9-bf01-398576a600a3",
+      "name": "GA4 - Event Metrics",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "typeVersion": 2,
+      "position": [
+        208,
+        1696
+      ],
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "N822fmXx9EAJHHvz",
+          "name": "Google Analytics account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "={{ $('Backfill Config').item.json.project_id }}",
+          "mode": "id"
+        },
+        "sqlQuery": "-- Creates and populates a daily table for event-specific metrics.\nCREATE OR REPLACE TABLE `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_event_metrics_data_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (\n  date DATE,\n  eventName STRING,\n  eventCount INT64,\n  eventCountPerUser FLOAT64,\n  eventValue FLOAT64\n);\n\n-- Insert data from the GA4 node.\nINSERT INTO `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_event_metrics_data_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (date, eventName, eventCount, eventCountPerUser, eventValue)\nVALUES\n{{ $items()[0].json.rows.map(row => `(PARSE_DATE('%Y%m%d', '${row.dimensionValues[0].value}'), '${row.dimensionValues[1].value}', ${row.metricValues[0].value || 'NULL'}, ${row.metricValues[1].value || 'NULL'}, ${row.metricValues[2].value || 'NULL'})`).join(',') }};\n",
+        "options": {}
+      },
+      "id": "660d2bcb-0376-4c34-9d51-da5f434bc7ad",
+      "name": "BQ - ga4_event_metrics_data",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        1696
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "kDd0MUBzG5npSwBI",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "propertyId": {
+          "__rl": true,
+          "value": "={{ $json['GA4 Property ID'] }}",
+          "mode": "id"
+        },
+        "dateRange": "custom",
+        "startDate": "={{ $json.startDate }}",
+        "endDate": "={{ $json.endDate }}",
+        "metricsGA4": {
+          "metricValues": [
+            {},
+            {
+              "listName": "other",
+              "name": "=ecommercePurchases"
+            },
+            {
+              "listName": "screenPageViews"
+            },
+            {
+              "listName": "other",
+              "name": "=purchaseRevenue"
+            },
+            {
+              "listName": "eventCount"
+            },
+            {
+              "listName": "other",
+              "name": "=engagementRate"
+            }
+          ]
+        },
+        "dimensionsGA4": {
+          "dimensionValues": [
+            {},
+            {
+              "listName": "pageLocation"
+            }
+          ]
+        },
+        "returnAll": true,
+        "simple": false,
+        "additionalFields": {}
+      },
+      "id": "ca17e61d-6685-4d9b-a60b-5c2072942182",
+      "name": "GA4 - Page Location",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "typeVersion": 2,
+      "position": [
+        208,
+        1888
+      ],
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "N822fmXx9EAJHHvz",
+          "name": "Google Analytics account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "={{ $('Backfill Config').item.json.project_id }}",
+          "mode": "id"
+        },
+        "sqlQuery": "-- Creates and populates a daily table for metrics by page location.\nCREATE OR REPLACE TABLE `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_page_location_data_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (\n  date DATE,\n  pageLocation STRING,\n  totalUsers INT64,\n  ecommercePurchases INT64,\n  purchaseRevenue FLOAT64,\n  screenPageViews INT64,\n  eventCount INT64,\n  engagementRate FLOAT64\n);\n\n-- Insert data from the GA4 node.\nINSERT INTO `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_page_location_data_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (date, pageLocation, totalUsers, ecommercePurchases, purchaseRevenue, screenPageViews, eventCount, engagementRate)\nVALUES\n{{ $items()[0].json.rows.map(row => `(PARSE_DATE('%Y%m%d', '${row.dimensionValues[0].value}'), '${row.dimensionValues[1].value}', ${row.metricValues[0].value || 'NULL'}, ${row.metricValues[1].value || 'NULL'}, ${row.metricValues[2].value || 'NULL'}, ${row.metricValues[3].value || 'NULL'}, ${row.metricValues[4].value || 'NULL'}, ${row.metricValues[5].value || 'NULL'})`).join(',') }};\n",
+        "options": {}
+      },
+      "id": "d3297ebb-0cf1-4494-aa88-3a90da515601",
+      "name": "BQ - ga4_page_location_data",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        1888
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "kDd0MUBzG5npSwBI",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "propertyId": {
+          "__rl": true,
+          "value": "={{ $json['GA4 Property ID'] }}",
+          "mode": "id"
+        },
+        "dateRange": "custom",
+        "startDate": "={{ $json.startDate }}",
+        "endDate": "={{ $json.endDate }}",
+        "metricsGA4": {
+          "metricValues": [
+            {},
+            {
+              "listName": "sessions"
+            },
+            {
+              "listName": "eventCount"
+            },
+            {
+              "listName": "other",
+              "name": "=ecommercePurchases"
+            },
+            {
+              "listName": "other",
+              "name": "=engagementRate"
+            },
+            {
+              "listName": "other",
+              "name": "=purchaseRevenue"
+            }
+          ]
+        },
+        "dimensionsGA4": {
+          "dimensionValues": [
+            {},
+            {
+              "listName": "=other",
+              "name": "=landingPage"
+            }
+          ]
+        },
+        "returnAll": true,
+        "simple": false,
+        "additionalFields": {}
+      },
+      "id": "e24542e4-60ec-4a0f-a3e7-72a87da6f0cf",
+      "name": "GA4 - Landing Page",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "typeVersion": 2,
+      "position": [
+        208,
+        2080
+      ],
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "N822fmXx9EAJHHvz",
+          "name": "Google Analytics account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "propertyId": {
+          "__rl": true,
+          "value": "={{ $json['GA4 Property ID'] }}",
+          "mode": "id"
+        },
+        "dateRange": "custom",
+        "startDate": "={{ $json.startDate }}",
+        "endDate": "={{ $json.endDate }}",
+        "metricsGA4": {
+          "metricValues": [
+            {
+              "listName": "other",
+              "name": "=itemPurchaseQuantity"
+            },
+            {
+              "listName": "other",
+              "name": "=itemRevenue"
+            }
+          ]
+        },
+        "dimensionsGA4": {
+          "dimensionValues": [
+            {},
+            {
+              "listName": "other",
+              "name": "=transactionId"
+            },
+            {
+              "listName": "itemName"
+            }
+          ]
+        },
+        "returnAll": true,
+        "simple": false,
+        "additionalFields": {}
+      },
+      "id": "2d19c92b-e5c1-4dd7-99fe-b88478fbd645",
+      "name": "GA4 - Transaction Items",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "typeVersion": 2,
+      "position": [
+        208,
+        -224
+      ],
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "N822fmXx9EAJHHvz",
+          "name": "Google Analytics account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "={{ $('Backfill Config').item.json.project_id }}",
+          "mode": "id"
+        },
+        "sqlQuery": "-- This query first creates a new table for the specified date range, replacing it if it already exists.\n-- Then, it inserts the transaction data passed from the previous n8n node.\nCREATE OR REPLACE TABLE `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_transaction_items_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (\n  date DATE,\n  transactionId STRING,\n  itemName STRING,\n  itemPurchaseQuantity INT64,\n  itemRevenue FLOAT64\n);\n\n-- Insert data from the GA4 node into the newly created table.\nINSERT INTO `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_transaction_items_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (date, transactionId, itemName, itemPurchaseQuantity, itemRevenue)\nVALUES\n{{ $items()[0].json.rows.map(row => `(PARSE_DATE('%Y%m%d', '${row.dimensionValues[2].value}'), '${row.dimensionValues[0].value}', '${row.dimensionValues[1].value}', ${row.metricValues[0].value || 'NULL'}, ${row.metricValues[1].value || 'NULL'})`).join(',') }};\n",
+        "options": {}
+      },
+      "id": "064076e7-325b-4176-9c5a-1ead10d8e8cb",
+      "name": "BQ - ga4_transaction_items",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        -224
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "kDd0MUBzG5npSwBI",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e3e88ddb-e0de-4400-8de4-220fa8651d21",
+              "name": "=GA4 Property ID",
+              "value": "461978355",
+              "type": "string"
+            },
+            {
+              "id": "4c4ca0dd-c7dd-466c-8a8e-028da8377d49",
+              "name": "project_id",
+              "value": "sublime-flux-378608",
+              "type": "string"
+            },
+            {
+              "id": "f0b12ee2-88f1-4d47-af66-f9250dafab57",
+              "name": "dataset_id",
+              "value": "GA4",
+              "type": "string"
+            },
+            {
+              "id": "8a6d84bb-a106-403b-a34e-8e33a3a2910a",
+              "name": "startDate",
+              "value": "={{ DateTime.now().minus({ days: 9 }).toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "c3d4c4ea-f94a-4e40-8d85-f47e80942bf8",
+              "name": "endDate",
+              "value": "={{ DateTime.now().minus({ days: 2 }).toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -16,
+        928
+      ],
+      "id": "32137010-acab-4f40-bdf8-1133e32505aa",
+      "name": "Backfill Config"
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "={{ $('Backfill Config').item.json.project_id }}",
+          "mode": "id"
+        },
+        "sqlQuery": "-- Creates and populates a daily table for landing page performance metrics.\nCREATE OR REPLACE TABLE `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_landing_page_data_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (\n  date DATE,\n  landingPage STRING,\n  totalUsers INT64,\n  sessions INT64,\n  eventCount INT64,\n  ecommercePurchases INT64,\n  engagementRate FLOAT64,\n  purchaseRevenue FLOAT64\n);\n\n-- Insert data from the GA4 node.\nINSERT INTO `{{ $('Backfill Config').item.json.project_id }}`.`{{ $('Backfill Config').item.json.dataset_id }}`.ga4_landing_page_data_{{ $('Backfill Config').item.json.startDate.replaceAll('-', '') }}_{{ $('Backfill Config').item.json.endDate.replaceAll('-', '') }} (date, landingPage, totalUsers, sessions, eventCount, ecommercePurchases, engagementRate, purchaseRevenue)\nVALUES\n{{ $items()[0].json.rows.map(row => `(PARSE_DATE('%Y%m%d', '${row.dimensionValues[0].value}'), '${row.dimensionValues[1].value}', ${row.metricValues[0].value || 'NULL'}, ${row.metricValues[1].value || 'NULL'}, ${row.metricValues[2].value || 'NULL'}, ${row.metricValues[3].value || 'NULL'}, ${row.metricValues[4].value || 'NULL'}, ${row.metricValues[5].value || 'NULL'})`).join(',') }};\n",
+        "options": {
+          "timeoutMs": 500000
+        }
+      },
+      "id": "7d08b896-ec12-4b3a-a959-a811b3f940eb",
+      "name": "BQ - ga4_landing_page_data",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        2080
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "kDd0MUBzG5npSwBI",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "numberInputs": 10
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1664,
+        640
+      ],
+      "id": "1f2afbfb-d058-400a-800c-f3511ea2f859",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2144,
+        976
+      ],
+      "id": "4a2b71aa-9207-457f-8914-cbad0c51fd32",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This code processes the results from all BigQuery nodes and creates a summary message.\n\n// Statically define the names of the BigQuery nodes in the exact order they are connected to the Merge node(s).\nconst nodeNames = [\n  'BQ - ga4_transaction_items',\n  'BQ - ga4_data_session_channel_group',\n  'BQ - ga4_data_session_source_campaign_medium',\n  'BQ - ga4_data_country_language_city',\n  'BQ - ga4_data_item_name',\n  'BQ - ga4_data_browser_os_device',\n  'BQ - ga4_data_first_user_source_medium',\n  'BQ - ga4_data_first_user_channel_group',\n  'BQ - ga4_ads_data',\n  'BQ - ga4_all_metrics_data',\n  'BQ - ga4_event_metrics_data',\n  'BQ - ga4_page_location_data',\n  'BQ - ga4_landing_page_data'\n];\n\nconst successfulNodes = [];\nconst failedNodes = [];\n\n// Loop through all the input items from the previous nodes.\nfor (const [index, item] of $input.all().entries()) {\n  const nodeName = nodeNames[index] || `Unknown Node (Input ${index + 1})`;\n\n  if (item.json.error) {\n    // Escape underscores in the node name to prevent Markdown parsing errors\n    const escapedNodeName = nodeName.replace(/_/g, '\\\\_');\n    failedNodes.push(escapedNodeName);\n  } else {\n    successfulNodes.push(nodeName);\n  }\n}\n\n// Start building the message string with the success count.\nlet message = `GA4 to BigQuery Workflow Status: ${successfulNodes.length}/13 Successful ✅\\n\\n`;\n\n// Add a section for failed nodes only if there are any.\nif (failedNodes.length > 0) {\n  message += \"❌ **Failed Nodes:**\\n\" + failedNodes.join(\"\\n\");\n}\n\n// Return the final message to be used in the Telegram node.\nreturn [{ json: { message: message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2352,
+        976
+      ],
+      "id": "6afb5cdf-057f-44df-9ce4-cd8ed9ef0e30",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "chatId": "-1002962247686",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2560,
+        976
+      ],
+      "id": "5cc149c3-6045-4965-b8ae-24540b9d0556",
+      "name": "Send a text message",
+      "webhookId": "255e9c6f-0869-4f6d-b8df-da3717c09025",
+      "credentials": {
+        "telegramApi": {
+          "id": "wkc1e6wkYDiiJth2",
+          "name": "GA4 Backfill"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# 🚀 N8N GA4 Backfill Workflow\n\n## Automate your GA4 Backfilling!\n\nThis workflow fetches key reports from Google Analytics 4 and loads them into Google BigQuery, complete with status alerts.\n\n### 📋 How to Use\n\n**1. Configure Workflow ⚙️**\n- Open the **Backfill Config** node.\n- Set your `project_id`, `dataset_id`, date range, and `GA4 Property ID`.\n\n**2. Set Credentials 🔑**\n- Authenticate your Google Analytics and Google BigQuery accounts in one of each type of node.\n- Set up your Telegram credentials and Chat ID in the final **Telegram** node.\n\n**3. Run the Workflow ▶️**\n- Activate the workflow to run on its schedule via the **Schedule Trigger**, or run it manually at any time.\n\n---\n\n*For detailed instructions, questions, or more information, please visit the [GitHub repository](https://github.com/aliasoblomov/N8N-GA4-Backfill-Workflow).*",
+        "height": 1056,
+        "width": 992,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1040,
+        -304
+      ],
+      "typeVersion": 1,
+      "id": "fc42ea09-2939-4ae8-a41b-dd080e06303d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 2624,
+        "width": 3888,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1040,
+        -304
+      ],
+      "typeVersion": 1,
+      "id": "ac908102-3adf-4420-84c2-5aa350c2f909",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        928
+      ],
+      "id": "249445da-4fed-48ee-ab82-ec88ee09e823",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "GA4 - Session Channel Group": {
+      "main": [
+        [
+          {
+            "node": "BQ - ga4_data_session_channel_group",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BQ - ga4_data_session_channel_group": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "GA4 - Session Source/Campaign/Medium": {
+      "main": [
+        [
+          {
+            "node": "BQ - ga4_data_session_source_campaign_medium",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BQ - ga4_data_session_source_campaign_medium": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "GA4 - Country/Language/City": {
+      "main": [
+        [
+          {
+            "node": "BQ - ga4_data_country_language_city",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BQ - ga4_data_country_language_city": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "GA4 - Item Name": {
+      "main": [
+        [
+          {
+            "node": "BQ - ga4_data_item_name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BQ - ga4_data_item_name": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "GA4 - Browser/OS/Device": {
+      "main": [
+        [
+          {
+            "node": "BQ - ga4_data_browser_os_device",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BQ - ga4_data_browser_os_device": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "GA4 - First User Source/Medium": {
+      "main": [
+        [
+          {
+            "node": "BQ - ga4_data_first_user_source_medium",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BQ - ga4_data_first_user_source_medium": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "GA4 - First User Channel Group": {
+      "main": [
+        [
+          {
+            "node": "BQ - ga4_data_first_user_channel_group",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BQ - ga4_data_first_user_channel_group": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "GA4 - Ads Data": {
+      "main": [
+        [
+          {
+            "node": "BQ - ga4_ads_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BQ - ga4_ads_data": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "GA4 - All Metrics": {
+      "main": [
+        [
+          {
+            "node": "BQ - ga4_all_metrics_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BQ - ga4_all_metrics_data": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 9
+          }
+        ]
+      ]
+    },
+    "GA4 - Event Metrics": {
+      "main": [
+        [
+          {
+            "node": "BQ - ga4_event_metrics_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BQ - ga4_event_metrics_data": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "GA4 - Page Location": {
+      "main": [
+        [
+          {
+            "node": "BQ - ga4_page_location_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BQ - ga4_page_location_data": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "GA4 - Landing Page": {
+      "main": [
+        [
+          {
+            "node": "BQ - ga4_landing_page_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GA4 - Transaction Items": {
+      "main": [
+        [
+          {
+            "node": "BQ - ga4_transaction_items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backfill Config": {
+      "main": [
+        [
+          {
+            "node": "GA4 - Transaction Items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GA4 - Session Channel Group",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GA4 - Session Source/Campaign/Medium",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GA4 - Country/Language/City",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GA4 - Item Name",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GA4 - Browser/OS/Device",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GA4 - First User Source/Medium",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GA4 - First User Channel Group",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GA4 - Ads Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GA4 - All Metrics",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GA4 - Event Metrics",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GA4 - Page Location",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GA4 - Landing Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BQ - ga4_transaction_items": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BQ - ga4_landing_page_data": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Backfill Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "deaf20ac-f615-4c34-91fc-854a1c864673",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6035d639b53e3eebb30ee73098b25c08257ede7c574cb227ad6af2c948b50801"
+  },
+  "id": "EhFNYP0tIt6NeApW",
+  "tags": []
+}
