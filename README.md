@@ -3,6 +3,8 @@
 
 This repository provides a robust N8N workflow to reliably backfill historical Google Analytics 4 (GA4) data into Google BigQuery. It serves as a more accessible, automated, and no-code alternative to the previous [Python-based backfill solution](https://github.com/aliasoblomov/Backfill-GA4-to-BigQuery), offering easier authentication, superior automation, and built-in status monitoring.
 
+[N8N-GA4-Backfill-Workflow.png](https://postimg.cc/k6FrN7ds)
+
 ## Table of Contents
 - [Why This Workflow Exists](#why-this-workflow-exists)
 - [Features](#features)
