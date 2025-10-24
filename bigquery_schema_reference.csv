@@ -1,0 +1,102 @@
+Table Name,Column Name,Data Type,Description,Category
+ga4_transaction_items,date,DATE,The date of the transaction,E-commerce
+ga4_transaction_items,transactionId,STRING,Unique transaction identifier,E-commerce
+ga4_transaction_items,itemName,STRING,Product name,E-commerce
+ga4_transaction_items,itemPurchaseQuantity,INT64,Quantity purchased,E-commerce
+ga4_transaction_items,itemRevenue,FLOAT64,Revenue from this item (EUR),E-commerce
+ga4_data_session_channel_group,date,DATE,The date of the session,Traffic & Acquisition
+ga4_data_session_channel_group,sessionDefaultChannelGroup,STRING,"Default channel group (Organic Search, Paid Search, Direct, etc.)",Traffic & Acquisition
+ga4_data_session_channel_group,sessions,INT64,Number of sessions,Traffic & Acquisition
+ga4_data_session_channel_group,totalUsers,INT64,Total number of users,Traffic & Acquisition
+ga4_data_session_channel_group,newUsers,INT64,Number of new users,Traffic & Acquisition
+ga4_data_session_channel_group,ecommercePurchases,INT64,Number of purchase transactions,Traffic & Acquisition
+ga4_data_session_channel_group,purchaseRevenue,FLOAT64,Total purchase revenue (EUR),Traffic & Acquisition
+ga4_data_session_source_campaign_medium,date,DATE,The date of the session,Traffic & Acquisition
+ga4_data_session_source_campaign_medium,sessionSource,STRING,"Traffic source (google, facebook, direct, etc.)",Traffic & Acquisition
+ga4_data_session_source_campaign_medium,sessionCampaignName,STRING,Campaign name from UTM parameters,Traffic & Acquisition
+ga4_data_session_source_campaign_medium,sessionMedium,STRING,"Traffic medium (organic, cpc, email, referral, etc.)",Traffic & Acquisition
+ga4_data_session_source_campaign_medium,sessions,INT64,Number of sessions,Traffic & Acquisition
+ga4_data_session_source_campaign_medium,totalUsers,INT64,Total number of users,Traffic & Acquisition
+ga4_data_session_source_campaign_medium,newUsers,INT64,Number of new users,Traffic & Acquisition
+ga4_data_session_source_campaign_medium,ecommercePurchases,INT64,Number of purchase transactions,Traffic & Acquisition
+ga4_data_session_source_campaign_medium,purchaseRevenue,FLOAT64,Total purchase revenue (EUR),Traffic & Acquisition
+ga4_data_country_language_city,date,DATE,The date,Geographic & Device
+ga4_data_country_language_city,country,STRING,"User's country (Italy, United States, etc.)",Geographic & Device
+ga4_data_country_language_city,language,STRING,"Browser language (it, en, es, etc.)",Geographic & Device
+ga4_data_country_language_city,city,STRING,User's city,Geographic & Device
+ga4_data_country_language_city,sessions,INT64,Number of sessions,Geographic & Device
+ga4_data_country_language_city,screenPageViews,INT64,Number of page views,Geographic & Device
+ga4_data_country_language_city,totalUsers,INT64,Total number of users,Geographic & Device
+ga4_data_country_language_city,newUsers,INT64,Number of new users,Geographic & Device
+ga4_data_country_language_city,ecommercePurchases,INT64,Number of purchase transactions,Geographic & Device
+ga4_data_country_language_city,purchaseRevenue,FLOAT64,Total purchase revenue (EUR),Geographic & Device
+ga4_data_item_name,date,DATE,The date,E-commerce
+ga4_data_item_name,itemName,STRING,Product name,E-commerce
+ga4_data_item_name,itemPurchaseQuantity,INT64,Total quantity purchased,E-commerce
+ga4_data_item_name,itemRevenue,FLOAT64,Total revenue from this product (EUR),E-commerce
+ga4_data_browser_os_device,date,DATE,The date,Geographic & Device
+ga4_data_browser_os_device,browser,STRING,"Browser name (Chrome, Safari, Firefox, etc.)",Geographic & Device
+ga4_data_browser_os_device,operatingSystem,STRING,"Operating system (Windows, iOS, Android, macOS, etc.)",Geographic & Device
+ga4_data_browser_os_device,deviceCategory,STRING,"Device type (mobile, desktop, tablet)",Geographic & Device
+ga4_data_browser_os_device,sessions,INT64,Number of sessions,Geographic & Device
+ga4_data_browser_os_device,screenPageViews,INT64,Number of page views,Geographic & Device
+ga4_data_browser_os_device,totalUsers,INT64,Total number of users,Geographic & Device
+ga4_data_browser_os_device,newUsers,INT64,Number of new users,Geographic & Device
+ga4_data_browser_os_device,ecommercePurchases,INT64,Number of purchase transactions,Geographic & Device
+ga4_data_browser_os_device,purchaseRevenue,FLOAT64,Total purchase revenue (EUR),Geographic & Device
+ga4_data_first_user_source_medium,date,DATE,The date,Traffic & Acquisition
+ga4_data_first_user_source_medium,firstUserMedium,STRING,Medium of first user acquisition,Traffic & Acquisition
+ga4_data_first_user_source_medium,firstUserSource,STRING,Source of first user acquisition,Traffic & Acquisition
+ga4_data_first_user_source_medium,firstUserCampaignName,STRING,Campaign name of first user acquisition,Traffic & Acquisition
+ga4_data_first_user_source_medium,totalUsers,INT64,Total number of users,Traffic & Acquisition
+ga4_data_first_user_source_medium,newUsers,INT64,Number of new users,Traffic & Acquisition
+ga4_data_first_user_source_medium,ecommercePurchases,INT64,Number of purchase transactions,Traffic & Acquisition
+ga4_data_first_user_source_medium,purchaseRevenue,FLOAT64,Total purchase revenue (EUR),Traffic & Acquisition
+ga4_data_first_user_channel_group,date,DATE,The date,Traffic & Acquisition
+ga4_data_first_user_channel_group,firstUserDefaultChannelGroup,STRING,Channel group of first user acquisition,Traffic & Acquisition
+ga4_data_first_user_channel_group,totalUsers,INT64,Total number of users,Traffic & Acquisition
+ga4_data_first_user_channel_group,newUsers,INT64,Number of new users,Traffic & Acquisition
+ga4_data_first_user_channel_group,ecommercePurchases,INT64,Number of purchase transactions,Traffic & Acquisition
+ga4_data_first_user_channel_group,purchaseRevenue,FLOAT64,Total purchase revenue (EUR),Traffic & Acquisition
+ga4_ads_data,date,DATE,The date,Advertising
+ga4_ads_data,sessionSource,STRING,"Ad source (google, facebook, etc.)",Advertising
+ga4_ads_data,sessionMedium,STRING,"Ad medium (typically cpc for paid ads)",Advertising
+ga4_ads_data,sessionCampaignName,STRING,Campaign name,Advertising
+ga4_ads_data,ecommercePurchases,INT64,Number of purchase transactions,Advertising
+ga4_ads_data,averagePurchaseRevenue,FLOAT64,Average revenue per purchase (EUR),Advertising
+ga4_ads_data,purchaseRevenue,FLOAT64,Total purchase revenue (EUR),Advertising
+ga4_ads_data,advertiserAdClicks,INT64,Number of ad clicks,Advertising
+ga4_ads_data,advertiserAdCost,FLOAT64,Total ad spend (EUR),Advertising
+ga4_ads_data,advertiserAdCostPerClick,FLOAT64,Cost per click (EUR),Advertising
+ga4_ads_data,returnOnAdSpend,FLOAT64,ROAS (Revenue / Cost),Advertising
+ga4_all_metrics_data,date,DATE,The date,Engagement & Behavior
+ga4_all_metrics_data,sessions,INT64,Number of sessions,Engagement & Behavior
+ga4_all_metrics_data,totalUsers,INT64,Total number of users,Engagement & Behavior
+ga4_all_metrics_data,userEngagementDuration,INT64,Total engagement time in seconds,Engagement & Behavior
+ga4_all_metrics_data,newUsers,INT64,Number of new users,Engagement & Behavior
+ga4_all_metrics_data,engagementRate,FLOAT64,Percentage of engaged sessions (0-1),Engagement & Behavior
+ga4_all_metrics_data,engagedSessions,INT64,"Number of engaged sessions (>10s or 2+ pages or conversion)",Engagement & Behavior
+ga4_all_metrics_data,screenPageViews,INT64,Number of page views,Engagement & Behavior
+ga4_all_metrics_data,purchaseRevenue,FLOAT64,Total purchase revenue (EUR),Engagement & Behavior
+ga4_all_metrics_data,ecommercePurchases,INT64,Number of purchase transactions,Engagement & Behavior
+ga4_event_metrics_data,date,DATE,The date,Engagement & Behavior
+ga4_event_metrics_data,eventName,STRING,"Event name (purchase, add_to_cart, page_view, etc.)",Engagement & Behavior
+ga4_event_metrics_data,eventCount,INT64,Total number of events,Engagement & Behavior
+ga4_event_metrics_data,eventValue,FLOAT64,Sum of event values (if applicable),Engagement & Behavior
+ga4_event_metrics_data,eventCountPerUser,FLOAT64,Average events per user,Engagement & Behavior
+ga4_page_location_data,date,DATE,The date,Engagement & Behavior
+ga4_page_location_data,pageLocation,STRING,Full URL of the page,Engagement & Behavior
+ga4_page_location_data,totalUsers,INT64,Number of users who viewed this page,Engagement & Behavior
+ga4_page_location_data,ecommercePurchases,INT64,Number of purchases (page in conversion path),Engagement & Behavior
+ga4_page_location_data,purchaseRevenue,FLOAT64,Revenue attributed to this page (EUR),Engagement & Behavior
+ga4_page_location_data,screenPageViews,INT64,Number of page views,Engagement & Behavior
+ga4_page_location_data,eventCount,INT64,Number of events on this page,Engagement & Behavior
+ga4_page_location_data,engagementRate,FLOAT64,Engagement rate for this page (0-1),Engagement & Behavior
+ga4_landing_page_data,date,DATE,The date,Engagement & Behavior
+ga4_landing_page_data,landingPage,STRING,URL of the landing page (first page in session),Engagement & Behavior
+ga4_landing_page_data,totalUsers,INT64,Number of users who entered via this page,Engagement & Behavior
+ga4_landing_page_data,sessions,INT64,Number of sessions starting on this page,Engagement & Behavior
+ga4_landing_page_data,eventCount,INT64,Number of events in sessions starting here,Engagement & Behavior
+ga4_landing_page_data,ecommercePurchases,INT64,Number of purchases from sessions starting here,Engagement & Behavior
+ga4_landing_page_data,engagementRate,FLOAT64,Engagement rate for these sessions (0-1),Engagement & Behavior
+ga4_landing_page_data,purchaseRevenue,FLOAT64,Revenue from sessions starting here (EUR),Engagement & Behavior
